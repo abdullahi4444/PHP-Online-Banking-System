@@ -1,0 +1,186 @@
+<?php
+session_start();
+include('conf/config.php');
+include('conf/checklogin.php');
+check_login();
+$client_id = $_SESSION['client_id'];
+
+?>
+<!-- Log on to codeastro.com for more projects! -->
+<!DOCTYPE html>
+<html>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<?php include("dist/_partials/head.php"); ?>
+
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <?php include("dist/_partials/nav.php"); ?>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <?php include("dist/_partials/sidebar.php"); ?>
+
+        <!-- Content Wrapper. Contains page content -->
+        <?php
+        $client_id = $_SESSION['client_id'];
+        $ret = "SELECT * FROM  iB_clients WHERE client_id =? ";
+        $stmt = $mysqli->prepare($ret);
+        $stmt->bind_param('i', $client_id);
+        $stmt->execute(); //ok
+        $res = $stmt->get_result();
+        $cnt = 1;
+        while ($row = $res->fetch_object()) {
+
+        ?>
+            <div class="content-wrapper">
+                <!-- Content Header (Page header) -->
+                <section class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1 style="color: #5e35b1; font-size: 28px; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                    <?php echo $row->name; ?> iBanking Accounts
+                                </h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="pages_dashboard.php">Dashboard</a></li>
+                                    <li class="breadcrumb-item"><a href="pages_balance_enquiries.php">Finances</a></li>
+                                    <li class="breadcrumb-item"><a href="pages_balance_enquiries.php">Balances</a></li>
+                                    <li class="breadcrumb-item active"><?php echo $row->name; ?> Accs</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div><!-- /.container-fluid -->
+                </section>
+
+                <!-- Main content -->
+                <section class="content">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Select on any action options to check your account balances</h3>
+                                </div>
+                                <div class="card-body table-responsive">
+                                    <table id="example1" class="table table-hover table-bordered table-striped" style="width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background-color: #f9fafb; border-radius: 12px; overflow: hidden;">
+                                        <thead>
+                                            <tr style="background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #000000;">
+                                                <th>#</th>
+                                                <th>Name</th>
+                                                <th>Acc Number</th>
+                                                <th>Rate</th>
+                                                <th>Acc Type</th>
+                                                <th>Acc Owner</th>
+                                                <th>Date Opened</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            //fetch all iB_Accs Which belongs to selected client
+                                            $client_id = $_SESSION['client_id'];
+                                            $ret = "SELECT * FROM  iB_bankAccounts WHERE client_id = ?";
+                                            $stmt = $mysqli->prepare($ret);
+                                            $stmt->bind_param('i', $client_id);
+                                            $stmt->execute(); //ok
+                                            $res = $stmt->get_result();
+                                            $cnt = 1;
+                                            while ($row = $res->fetch_object()) {
+                                                //Trim Timestamp to DD-MM-YYYY : H-M-S
+                                                $dateOpened = $row->created_at;
+
+                                            ?>
+
+                                                <tr>
+                                                    <td><?php echo $cnt; ?></td>
+                                                    <td><?php echo $row->acc_name; ?></td>
+                                                    <td><?php echo $row->account_number; ?></td>
+                                                    <td><?php echo $row->acc_rates; ?>%</td>
+                                                    <td><?php echo $row->acc_type; ?></td>
+                                                    <td><?php echo $row->client_name; ?></td>
+                                                    <td><?php echo date("d-M-Y", strtotime($dateOpened)); ?></td>
+                                                    <td>
+                                                        <a href="pages_check_client_acc_balance.php?account_id=<?php echo $row->account_id; ?>&acccount_number=<?php echo $row->account_number; ?>"
+                                                            style="
+                                                                display: inline-flex;
+                                                                align-items: center;
+                                                                gap: 8px;
+                                                                background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+                                                                color: #000;
+                                                                padding: 10px 18px;
+                                                                font-size: 14px;
+                                                                font-weight: 600;
+                                                                text-decoration: none;
+                                                                border-radius: 12px;
+                                                                box-shadow: 0 8px 20px rgba(171, 108, 255, 0.3);
+                                                                border: 1px solid rgba(255, 255, 255, 0.2);
+                                                                backdrop-filter: blur(8px);
+                                                                transition: all 0.3s ease;
+                                                            "
+                                                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 24px rgba(171, 108, 255, 0.4)'"
+                                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(171, 108, 255, 0.3)'"
+                                                        >
+                                                            <i class="fas fa-eye" style="font-size: 16px;"></i>
+                                                            <i class="fas fa-money-bill-alt" style="font-size: 16px;"></i>
+                                                            <span style="white-space: nowrap;">Check Balance</span>
+                                                        </a>
+                                                        </td>
+
+                                                </tr>
+                                            <?php $cnt = $cnt + 1;
+                                            } ?>
+                                            </tfoot>
+                                    </table>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
+                            <!-- /.card -->
+                        </div>
+                        <!-- /.col -->
+                    </div><!-- Log on to codeastro.com for more projects! -->
+                    <!-- /.row -->
+                </section>
+                <!-- /.content -->
+            </div>
+        <?php } ?>
+        <!-- /.content-wrapper -->
+        <?php include("dist/_partials/footer.php"); ?>
+
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- jQuery -->
+    <script src="plugins/jquery/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables -->
+    <script src="plugins/datatables/jquery.dataTables.js"></script>
+    <script src="plugins/datatables-bs4/js/dataTables.bootstrap4.js"></script>
+    <!-- AdminLTE App -->
+    <script src="dist/js/adminlte.min.js"></script>
+    <!-- AdminLTE for demo purposes -->
+    <script src="dist/js/demo.js"></script>
+    <!-- page script -->
+    <script>
+        $(function() {
+            $("#example1").DataTable();
+            $('#example2').DataTable({
+                "paging": true,
+                "lengthChange": false,
+                "searching": false,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+            });
+        });
+    </script>
+</body>
+
+</html>
